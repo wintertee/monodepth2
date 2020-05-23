@@ -66,6 +66,9 @@ def test_simple(args):
     print("-> Loading model from ", model_path)
     encoder_path = os.path.join(model_path, "encoder.pth")
     depth_decoder_path = os.path.join(model_path, "depth.pth")
+    pose_encoder_path = os.path.join(model_path, "pose_encoder.pth")
+    pose_decoder_path = os.path.join(model_path, "pose.pth")
+    
 
     # LOADING PRETRAINED MODEL
     print("   Loading pretrained encoder")

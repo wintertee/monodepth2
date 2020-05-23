@@ -38,15 +38,7 @@ class MonoDataset(data.Dataset):
         is_train
         img_ext
     """
-    def __init__(self,
-                 data_path,
-                 filenames,
-                 height,
-                 width,
-                 frame_idxs,
-                 num_scales,
-                 is_train=False,
-                 img_ext='.jpg'):
+    def __init__(self, data_path, filenames, height, width, frame_idxs, num_scales, is_train=False, img_ext='.jpg'):
         super(MonoDataset, self).__init__()
 
         self.data_path = data_path
@@ -71,8 +63,7 @@ class MonoDataset(data.Dataset):
             self.contrast = (0.8, 1.2)
             self.saturation = (0.8, 1.2)
             self.hue = (-0.1, 0.1)
-            transforms.ColorJitter.get_params(
-                self.brightness, self.contrast, self.saturation, self.hue)
+            transforms.ColorJitter.get_params(self.brightness, self.contrast, self.saturation, self.hue)
         except TypeError:
             self.brightness = 0.2
             self.contrast = 0.2
@@ -81,9 +72,8 @@ class MonoDataset(data.Dataset):
 
         self.resize = {}
         for i in range(self.num_scales):
-            s = 2 ** i
-            self.resize[i] = transforms.Resize((self.height // s, self.width // s),
-                                               interpolation=self.interp)
+            s = 2**i
+            self.resize[i] = transforms.Resize((self.height // s, self.width // s), interpolation=self.interp)
 
         self.load_depth = self.check_depth()
 
@@ -94,6 +84,7 @@ class MonoDataset(data.Dataset):
         images in this item. This ensures that all images input to the pose network receive the
         same augmentation.
         """
+        #  resize
         for k in list(inputs):
             frame = inputs[k]
             if "color" in k:
@@ -101,6 +92,7 @@ class MonoDataset(data.Dataset):
                 for i in range(self.num_scales):
                     inputs[(n, im, i)] = self.resize[i](inputs[(n, im, i - 1)])
 
+        # to tensor & color_aug
         for k in list(inputs):
             f = inputs[k]
             if "color" in k:
@@ -164,8 +156,8 @@ class MonoDataset(data.Dataset):
         for scale in range(self.num_scales):
             K = self.K.copy()
 
-            K[0, :] *= self.width // (2 ** scale)
-            K[1, :] *= self.height // (2 ** scale)
+            K[0, :] *= self.width // (2**scale)
+            K[1, :] *= self.height // (2**scale)
 
             inv_K = np.linalg.pinv(K)
 
@@ -173,12 +165,10 @@ class MonoDataset(data.Dataset):
             inputs[("inv_K", scale)] = torch.from_numpy(inv_K)
 
         if do_color_aug:
-            color_aug = transforms.ColorJitter.get_params(
-                self.brightness, self.contrast, self.saturation, self.hue)
+            color_aug = transforms.ColorJitter.get_params(self.brightness, self.contrast, self.saturation, self.hue)
         else:
-            color_aug = (lambda x: x)
-
-        self.preprocess(inputs, color_aug)
+            color_aug = (lambda x: x)  # ANCHOR 如果不做数据增强，同一张图片会使用两次？ -> 不会。process_batch中只对color_aug做处理 -> color 存在的意义？
+        self.preprocess(inputs, color_aug)  # resize & color aug
 
         for i in self.frame_idxs:
             del inputs[("color", i, -1)]

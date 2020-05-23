@@ -109,7 +109,7 @@ class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ConvBlock, self).__init__()
 
-        self.conv = Conv3x3(in_channels, out_channels)
+        self.conv = Conv3x3(in_channels, out_channels)  # padding+conv
         self.nonlin = nn.ELU(inplace=True)
 
     def forward(self, x):
@@ -143,22 +143,82 @@ class BackprojectDepth(nn.Module):
         super(BackprojectDepth, self).__init__()
 
         self.batch_size = batch_size
-        self.height = height
-        self.width = width
+        self.height = height  # 4 for example
+        self.width = width  # 4 for example
 
         meshgrid = np.meshgrid(range(self.width), range(self.height), indexing='xy')
         self.id_coords = np.stack(meshgrid, axis=0).astype(np.float32)
-        self.id_coords = nn.Parameter(torch.from_numpy(self.id_coords),
-                                      requires_grad=False)
+        self.id_coords = nn.Parameter(torch.from_numpy(self.id_coords), requires_grad=False)
+        # torch.Size([2, 4, 4])
+        #
+        #  tensor([[[0., 1., 2., 3.],
+        #  [0., 1., 2., 3.],
+        #  [0., 1., 2., 3.],
+        #  [0., 1., 2., 3.]],
+        #
+        # [[0., 0., 0., 0.],
+        #  [1., 1., 1., 1.],
+        #  [2., 2., 2., 2.],
+        #  [3., 3., 3., 3.]]])
 
-        self.ones = nn.Parameter(torch.ones(self.batch_size, 1, self.height * self.width),
-                                 requires_grad=False)
+        self.ones = nn.Parameter(torch.ones(self.batch_size, 1, self.height * self.width), requires_grad=False)
+        # torch.Size([batch_size=5, 1, 4*4])
+        #
+        # tensor([[[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]],
 
-        self.pix_coords = torch.unsqueeze(torch.stack(
-            [self.id_coords[0].view(-1), self.id_coords[1].view(-1)], 0), 0)
+        # [[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]],
+
+        # [[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]],
+
+        # [[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]],
+
+        # [[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]]])
+
+        self.pix_coords = torch.unsqueeze(torch.stack([self.id_coords[0].view(-1), self.id_coords[1].view(-1)], 0), 0)
+        # torch.Size([1, 2, 16])
+        #
+        # tensor([[[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #          [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.]]])
         self.pix_coords = self.pix_coords.repeat(batch_size, 1, 1)
-        self.pix_coords = nn.Parameter(torch.cat([self.pix_coords, self.ones], 1),
-                                       requires_grad=False)
+        # torch.Size([5, 2, 16])
+        #
+        # tensor([[[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.]],
+        #
+        # [[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.]],
+        #
+        # [[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.]],
+        #
+        # [[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.]],
+        #
+        # [[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.]]])
+        self.pix_coords = nn.Parameter(torch.cat([self.pix_coords, self.ones], 1), requires_grad=False)
+        # torch.Size([5, 3, 16])
+        #
+        # tensor([[[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.],
+        #  [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]],
+
+        # [[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.],
+        #  [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]],
+
+        # [[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.],
+        #  [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]],
+
+        # [[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.],
+        #  [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]],
+
+        # [[0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3., 0., 1., 2., 3.],
+        #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.],
+        #  [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]]])
+
 
     def forward(self, depth, inv_K):
         cam_points = torch.matmul(inv_K[:, :3, :3], self.pix_coords)
@@ -215,21 +275,21 @@ def get_smooth_loss(disp, img):
     return grad_disp_x.mean() + grad_disp_y.mean()
 
 
-class SSIM(nn.Module):
+class SSIM(nn.Module):  # https://understandingwithcode.wordpress.com/2014/03/03/2/
     """Layer to compute the SSIM loss between a pair of images
     """
     def __init__(self):
         super(SSIM, self).__init__()
-        self.mu_x_pool   = nn.AvgPool2d(3, 1)
-        self.mu_y_pool   = nn.AvgPool2d(3, 1)
-        self.sig_x_pool  = nn.AvgPool2d(3, 1)
-        self.sig_y_pool  = nn.AvgPool2d(3, 1)
+        self.mu_x_pool = nn.AvgPool2d(3, 1)
+        self.mu_y_pool = nn.AvgPool2d(3, 1)
+        self.sig_x_pool = nn.AvgPool2d(3, 1)
+        self.sig_y_pool = nn.AvgPool2d(3, 1)
         self.sig_xy_pool = nn.AvgPool2d(3, 1)
 
         self.refl = nn.ReflectionPad2d(1)
 
-        self.C1 = 0.01 ** 2
-        self.C2 = 0.03 ** 2
+        self.C1 = 0.01**2
+        self.C2 = 0.03**2
 
     def forward(self, x, y):
         x = self.refl(x)
@@ -238,12 +298,12 @@ class SSIM(nn.Module):
         mu_x = self.mu_x_pool(x)
         mu_y = self.mu_y_pool(y)
 
-        sigma_x  = self.sig_x_pool(x ** 2) - mu_x ** 2
-        sigma_y  = self.sig_y_pool(y ** 2) - mu_y ** 2
+        sigma_x = self.sig_x_pool(x**2) - mu_x**2
+        sigma_y = self.sig_y_pool(y**2) - mu_y**2
         sigma_xy = self.sig_xy_pool(x * y) - mu_x * mu_y
 
         SSIM_n = (2 * mu_x * mu_y + self.C1) * (2 * sigma_xy + self.C2)
-        SSIM_d = (mu_x ** 2 + mu_y ** 2 + self.C1) * (sigma_x + sigma_y + self.C2)
+        SSIM_d = (mu_x**2 + mu_y**2 + self.C1) * (sigma_x + sigma_y + self.C2)
 
         return torch.clamp((1 - SSIM_n / SSIM_d) / 2, 0, 1)
 
@@ -252,18 +312,18 @@ def compute_depth_errors(gt, pred):
     """Computation of error metrics between predicted and ground truth depths
     """
     thresh = torch.max((gt / pred), (pred / gt))
-    a1 = (thresh < 1.25     ).float().mean()
-    a2 = (thresh < 1.25 ** 2).float().mean()
-    a3 = (thresh < 1.25 ** 3).float().mean()
+    a1 = (thresh < 1.25).float().mean()
+    a2 = (thresh < 1.25**2).float().mean()
+    a3 = (thresh < 1.25**3).float().mean()
 
-    rmse = (gt - pred) ** 2
+    rmse = (gt - pred)**2
     rmse = torch.sqrt(rmse.mean())
 
-    rmse_log = (torch.log(gt) - torch.log(pred)) ** 2
+    rmse_log = (torch.log(gt) - torch.log(pred))**2
     rmse_log = torch.sqrt(rmse_log.mean())
 
     abs_rel = torch.mean(torch.abs(gt - pred) / gt)
 
-    sq_rel = torch.mean((gt - pred) ** 2 / gt)
+    sq_rel = torch.mean((gt - pred)**2 / gt)
 
     return abs_rel, sq_rel, rmse, rmse_log, a1, a2, a3

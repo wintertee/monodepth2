@@ -23,16 +23,17 @@ class DepthDecoder(nn.Module):
         self.upsample_mode = 'nearest'
         self.scales = scales
 
-        self.num_ch_enc = num_ch_enc
+        self.num_ch_enc = num_ch_enc  # np.array([64, 64, 128, 256, 512])
         self.num_ch_dec = np.array([16, 32, 64, 128, 256])
 
         # decoder
         self.convs = OrderedDict()
-        for i in range(4, -1, -1):
+        for i in range(4, -1, -1):  # 4,3,2,1,0
             # upconv_0
             num_ch_in = self.num_ch_enc[-1] if i == 4 else self.num_ch_dec[i + 1]
             num_ch_out = self.num_ch_dec[i]
-            self.convs[("upconv", i, 0)] = ConvBlock(num_ch_in, num_ch_out)
+            self.convs[("upconv", i, 0)] = ConvBlock(num_ch_in, num_ch_out)  # ConvBlock: padding+conv2d+elu
+            # self.convs[("upconv", 4, 0)] = ConvBlock(self.num_ch_enc[-1]=512, self.num_ch_dec[4]=256)
 
             # upconv_1
             num_ch_in = self.num_ch_dec[i]
@@ -42,7 +43,8 @@ class DepthDecoder(nn.Module):
             self.convs[("upconv", i, 1)] = ConvBlock(num_ch_in, num_ch_out)
 
         for s in self.scales:
-            self.convs[("dispconv", s)] = Conv3x3(self.num_ch_dec[s], self.num_output_channels)
+            self.convs[("dispconv", s)] = Conv3x3(self.num_ch_dec[s],
+                                                  self.num_output_channels)  # Conv3x3: padding + conv2d
 
         self.decoder = nn.ModuleList(list(self.convs.values()))
         self.sigmoid = nn.Sigmoid()
@@ -58,6 +60,7 @@ class DepthDecoder(nn.Module):
             if self.use_skips and i > 0:
                 x += [input_features[i - 1]]
             x = torch.cat(x, 1)
+            # 把upsample(x)和input_features[i - 1]的通道拼接 张量的维度是(batch_size, channels, h, w)
             x = self.convs[("upconv", i, 1)](x)
             if i in self.scales:
                 self.outputs[("disp", i)] = self.sigmoid(self.convs[("dispconv", i)](x))
