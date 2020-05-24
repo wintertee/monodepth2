@@ -55,18 +55,14 @@ class Trainer:
         if self.opt.use_stereo:
             self.opt.frame_ids.append("s")
 
-        self.models["encoder"] = networks.ResnetEncoder(self.opt.num_layers, self.opt.weights_init == "pretrained")
-        # opt.num_layers：help="number of resnet layers", default=18, choices=[18, 34, 50, 101, 152]
+        # self.models["encoder"] = networks.ResnetEncoder(self.opt.num_layers, self.opt.weights_init == "pretrained")
+        self.models["encoder"] = networks.PackNeSt_encoder()  # REVIEW
+
         self.models["encoder"].to(self.device)
         self.parameters_to_train += list(self.models["encoder"].parameters())
 
-        self.models["depth"] = networks.DepthDecoder(self.models["encoder"].num_ch_enc, self.opt.scales)
-        # num_ch_enc 是每个大 conv 的输出的通道数
-        # self.num_ch_enc = np.array([64, 64, 128, 256, 512])
-        # if num_layers > 34:
-        #    self.num_ch_enc[1:] *= 4  # Resnet34以上的，第1个block开始输出通道*4
-        #
-        # opt.scales： help="scales used in the loss", default=[0, 1, 2, 3]
+        # self.models["depth"] = networks.DepthDecoder(self.models["encoder"].num_ch_enc, self.opt.scales)
+        self.models["depth"] = networks.PackNeSt_decoder()  # REVIEW
         self.models["depth"].to(self.device)
         self.parameters_to_train += list(self.models["depth"].parameters())
 
@@ -165,8 +161,11 @@ class Trainer:
             self.writers[mode] = SummaryWriter(os.path.join(self.log_path, mode))
 
         if not self.opt.no_ssim:
-            self.ssim = SSIM()
+            self.ssim = SSIM(kernel_size=9, stride=3, padding=0)
             self.ssim.to(self.device)
+
+        self.l1_loss_pool = L1conv(kernel_size=9, stride=3)
+        self.l1_loss_pool.to(self.device)
 
         self.backproject_depth = {}
         self.project_3d = {}
@@ -412,6 +411,7 @@ class Trainer:
         """
         abs_diff = torch.abs(target - pred)
         l1_loss = abs_diff.mean(1, True)
+        l1_loss = self.l1_loss_pool(l1_loss)
 
         if self.opt.no_ssim:
             reprojection_loss = l1_loss

@@ -219,7 +219,6 @@ class BackprojectDepth(nn.Module):
         #  [0., 0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 3., 3., 3., 3.],
         #  [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]]])
 
-
     def forward(self, depth, inv_K):
         cam_points = torch.matmul(inv_K[:, :3, :3], self.pix_coords)
         cam_points = depth.view(self.batch_size, 1, -1) * cam_points
@@ -275,18 +274,27 @@ def get_smooth_loss(disp, img):
     return grad_disp_x.mean() + grad_disp_y.mean()
 
 
+class L1conv(nn.Module):
+    def __init__(self, kernel_size, stride):
+        super(L1conv, self).__init__()
+        self.avgpool = nn.AvgPool2d(kernel_size, stride)
+
+    def forward(self, x):
+        return self.avgpool(x)
+
+
 class SSIM(nn.Module):  # https://understandingwithcode.wordpress.com/2014/03/03/2/
     """Layer to compute the SSIM loss between a pair of images
     """
-    def __init__(self):
+    def __init__(self, kernel_size=3, stride=1, padding=1):
         super(SSIM, self).__init__()
-        self.mu_x_pool = nn.AvgPool2d(3, 1)
-        self.mu_y_pool = nn.AvgPool2d(3, 1)
-        self.sig_x_pool = nn.AvgPool2d(3, 1)
-        self.sig_y_pool = nn.AvgPool2d(3, 1)
-        self.sig_xy_pool = nn.AvgPool2d(3, 1)
+        self.mu_x_pool = nn.AvgPool2d(kernel_size, stride)
+        self.mu_y_pool = nn.AvgPool2d(kernel_size, stride)
+        self.sig_x_pool = nn.AvgPool2d(kernel_size, stride)
+        self.sig_y_pool = nn.AvgPool2d(kernel_size, stride)
+        self.sig_xy_pool = nn.AvgPool2d(kernel_size, stride)
 
-        self.refl = nn.ReflectionPad2d(1)
+        self.refl = nn.ReflectionPad2d(padding)
 
         self.C1 = 0.01**2
         self.C2 = 0.03**2
