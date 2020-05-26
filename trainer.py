@@ -74,7 +74,7 @@ class Trainer:
                                                                      num_input_images=self.num_pose_frames)
 
                 self.models["pose_encoder"].to(self.device)
-                self.parameters_to_train += list(self.models["pose_encoder"].parameters())
+                # REVIEW self.parameters_to_train += list(self.models["pose_encoder"].parameters())
 
                 self.models["pose"] = networks.PoseDecoder(self.models["pose_encoder"].num_ch_enc,
                                                            num_input_features=1,
@@ -88,7 +88,7 @@ class Trainer:
                                                        "all" else 2)
 
             self.models["pose"].to(self.device)
-            self.parameters_to_train += list(self.models["pose"].parameters())
+            # REVIEW self.parameters_to_train += list(self.models["pose"].parameters())
 
         if self.opt.predictive_mask:
             assert self.opt.disable_automasking, \

@@ -62,7 +62,7 @@ def resnet_multiimage_input(num_layers, pretrained=False, num_input_images=1):  
 class ResnetEncoder(nn.Module):
     """Pytorch module for a resnet encoder
     """
-    def __init__(self, num_layers, pretrained, num_input_images=1):
+    def __init__(self, num_layers, pretrained, num_input_images=1, requires_grad=True):
         super(ResnetEncoder, self).__init__()
 
         self.num_ch_enc = np.array([64, 64, 128, 256, 512])
@@ -85,6 +85,10 @@ class ResnetEncoder(nn.Module):
 
         if num_layers > 34:
             self.num_ch_enc[1:] *= 4  # Resnet34以上的，第1个block开始输出通道*4
+
+        if not requires_grad:
+            for p in self.encoder.parameters():
+                p.requires_grad = False
 
     def forward(self, input_image):
         """图片输入 -> 标准化 -> conv1+bn ->   relu   -> maxpool ->   conv2_x   -> ... -> conv5_x

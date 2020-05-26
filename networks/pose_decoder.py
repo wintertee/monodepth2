@@ -12,7 +12,7 @@ from collections import OrderedDict
 
 
 class PoseDecoder(nn.Module):
-    def __init__(self, num_ch_enc, num_input_features, num_frames_to_predict_for=None, stride=1):
+    def __init__(self, num_ch_enc, num_input_features, num_frames_to_predict_for=None, stride=1, requires_grad=True):
         super(PoseDecoder, self).__init__()
 
         self.num_ch_enc = num_ch_enc
@@ -32,8 +32,13 @@ class PoseDecoder(nn.Module):
 
         self.net = nn.ModuleList(list(self.convs.values()))
 
+        if not requires_grad:
+            for p in self.parameters():
+                p.requires_grad = False
+
     def forward(self, input_features):
-        last_features = [f[-1] for f in input_features]  # [last_features[0][-1], last_features[1][-1], ...](batch_size, scale, channel, w,h)
+        last_features = [f[-1] for f in input_features
+                         ]  # [last_features[0][-1], last_features[1][-1], ...](batch_size, scale, channel, w,h)
 
         cat_features = [self.relu(self.convs["squeeze"](f)) for f in last_features]
         cat_features = torch.cat(cat_features, 1)
