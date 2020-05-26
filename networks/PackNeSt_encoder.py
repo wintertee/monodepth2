@@ -29,9 +29,9 @@ class PackNeSt_encoder(nn.Module):
         # Initial convolutional layer
         self.pre_calc = Conv2D(in_channels, ni, 5, 1)
 
-        self.pack1 = PackLayerConv3d(n1, pack_kernel[0], d=8)
-        self.pack2 = PackLayerConv3d(n2, pack_kernel[1], d=8)
-        self.pack3 = PackLayerConv3d(n3, pack_kernel[2], d=4)
+        self.pack1 = PackLayerConv3d(n1, pack_kernel[0], d=2)
+        self.pack2 = PackLayerConv3d(n2, pack_kernel[1], d=2)
+        self.pack3 = PackLayerConv3d(n3, pack_kernel[2], d=2)
         self.pack4 = PackLayerConv3d(n4, pack_kernel[3], d=2)
         self.pack5 = PackLayerConv3d(n5, pack_kernel[4], d=1)
 

@@ -52,9 +52,9 @@ class PackNeSt_decoder(nn.Module):
         # Depth Layers
 
         self.unpack_disps = nn.PixelShuffle(2)
-        self.unpack_disp4 = nn.Upsample(scale_factor=2, mode='nearest', align_corners=None)
-        self.unpack_disp3 = nn.Upsample(scale_factor=2, mode='nearest', align_corners=None)
-        self.unpack_disp2 = nn.Upsample(scale_factor=2, mode='nearest', align_corners=None)
+        self.unpack_disp4 = nn.functional.interpolate(scale_factor=2, mode='nearest', align_corners=None)
+        self.unpack_disp3 = nn.functional.interpolate(scale_factor=2, mode='nearest', align_corners=None)
+        self.unpack_disp2 = nn.functional.interpolate(scale_factor=2, mode='nearest', align_corners=None)
 
         self.disp4_layer = InvDepth(n4, out_channels=out_channels)
         self.disp3_layer = InvDepth(n3, out_channels=out_channels)
