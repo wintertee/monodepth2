@@ -7,12 +7,16 @@ from .Packlayers import UnpackLayerConv3d, Conv2D, InvDepth
 
 ########################################################################################################################
 
+
 class Upsample(nn.Module):
-    def __init__(self,  scale_factor):
+    def __init__(self, scale_factor, mode, align_corners):
         super(Upsample, self).__init__()
         self.scale_factor = scale_factor
+        self.mode = mode
+        self.align_corners = align_corners
+
     def forward(self, x):
-        return F.interpolate(x, scale_factor=self.scale_factor)
+        return F.interpolate(x, scale_factor=self.scale_factor, mode=self.mode, align_corners=self.align_corners)
 
 
 class PackNeSt_decoder(nn.Module):

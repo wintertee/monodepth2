@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from .Packlayers import PackLayerConv3d, ResidualBlock, Conv2D
 
 
-
 class PackNeSt_encoder(nn.Module):
     """
     PackNet network with 3d convolutions (version 01, from the CVPR paper).
