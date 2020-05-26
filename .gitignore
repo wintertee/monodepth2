@@ -3,7 +3,7 @@ __pycache__
 *_disp.jpg
 *_disp.npy
 *.npz
-.DS_store
+.DS_Store
 .vscode/
 kitti_data
 models
