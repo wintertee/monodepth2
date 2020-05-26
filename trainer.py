@@ -71,16 +71,14 @@ class Trainer:
                 # default="separate_resnet", choices=["posecnn", "separate_resnet", "shared"]
                 self.models["pose_encoder"] = networks.ResnetEncoder(self.opt.num_layers,
                                                                      self.opt.weights_init == "pretrained",
-                                                                     num_input_images=self.num_pose_frames,
-                                                                     requires_grad=False)  # REVIEW
+                                                                     num_input_images=self.num_pose_frames)  # REVIEW
 
                 self.models["pose_encoder"].to(self.device)
-                # REVIEW self.parameters_to_train += list(self.models["pose_encoder"].parameters())
+                self.parameters_to_train += list(self.models["pose_encoder"].parameters())
 
                 self.models["pose"] = networks.PoseDecoder(self.models["pose_encoder"].num_ch_enc,
                                                            num_input_features=1,
-                                                           num_frames_to_predict_for=2,
-                                                           requires_grad=False)  # REVIEW
+                                                           num_frames_to_predict_for=2)  # REVIEW
 
             elif self.opt.pose_model_type == "shared":
                 self.models["pose"] = networks.PoseDecoder(self.models["encoder"].num_ch_enc, self.num_pose_frames)
@@ -90,7 +88,7 @@ class Trainer:
                                                        "all" else 2)
 
             self.models["pose"].to(self.device)
-            # REVIEW self.parameters_to_train += list(self.models["pose"].parameters())
+            self.parameters_to_train += list(self.models["pose"].parameters())
 
         if self.opt.predictive_mask:
             assert self.opt.disable_automasking, \
