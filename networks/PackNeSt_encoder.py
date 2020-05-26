@@ -1,8 +1,10 @@
 # Copyright 2020 Toyota Research Institute.  All rights reserved.
 
 import torch.nn as nn
+import torch.nn.functional as F
 
 from .Packlayers import PackLayerConv3d, ResidualBlock, Conv2D
+
 
 
 class PackNeSt_encoder(nn.Module):
