@@ -6,11 +6,11 @@ from networks.PackNet01 import PackNet01
 
 from torchsummary import summary
 
-# encoder = PackNeSt_encoder()
+encoder = PackNeSt_encoder()
 # encoder = ResnetEncoder(18,False)
 # decoder = PackNeSt_decoder()
 # bottleneck = Bottleneck(64,64,radix=1)
-encoder = PackNet01()
+# encoder = PackNet01()
 
 # summary(bottleneck,(64,50,50))
 
