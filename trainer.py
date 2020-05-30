@@ -79,7 +79,7 @@ class Trainer:
                 self.parameters_to_train += list(self.models["pose_encoder"].parameters())
 
                 self.models["pose"] = nn.DataParallel(
-                    networks.PoseDecoder(self.models["pose_encoder"].num_ch_enc,
+                    networks.PoseDecoder(np.array([64, 64, 128, 256, 512]),
                                          num_input_features=1,
                                          num_frames_to_predict_for=2))  # REVIEW
 
