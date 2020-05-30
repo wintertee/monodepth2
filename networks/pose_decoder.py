@@ -45,7 +45,8 @@ class PoseDecoder(nn.Module):
         last_features = [f[-1] for f in input_features
                          ]  # [last_features[0][-1], last_features[1][-1], ...](batch_size, scale, channel, w,h)
 
-        cat_features = [self.relu(self.convs["squeeze"](f)) for f in last_features]
+        # cat_features = [self.relu(self.convs["squeeze"](f)) for f in last_features]
+        cat_features = [self.relu(getattr(self, "freeze")(f)) for f in last_features]
         cat_features = torch.cat(cat_features, 1)
 
         out = cat_features
