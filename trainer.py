@@ -12,6 +12,7 @@ import numpy as np
 import time
 
 import torch
+from torch import nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -56,29 +57,31 @@ class Trainer:
             self.opt.frame_ids.append("s")
 
         # self.models["encoder"] = networks.ResnetEncoder(self.opt.num_layers, self.opt.weights_init == "pretrained")
-        self.models["encoder"] = networks.PackNeSt_encoder()  # REVIEW
+        self.models["encoder"] = nn.DataParallel(networks.PackNeSt_encoder())  # REVIEW
 
         self.models["encoder"].to(self.device)
         self.parameters_to_train += list(self.models["encoder"].parameters())
 
         # self.models["depth"] = networks.DepthDecoder(self.models["encoder"].num_ch_enc, self.opt.scales)
-        self.models["depth"] = networks.PackNeSt_decoder()  # REVIEW
+        self.models["depth"] = nn.DataParallel(networks.PackNeSt_decoder())  # REVIEW
         self.models["depth"].to(self.device)
         self.parameters_to_train += list(self.models["depth"].parameters())
 
         if self.use_pose_net:
             if self.opt.pose_model_type == "separate_resnet":
                 # default="separate_resnet", choices=["posecnn", "separate_resnet", "shared"]
-                self.models["pose_encoder"] = networks.ResnetEncoder(self.opt.num_layers,
-                                                                     self.opt.weights_init == "pretrained",
-                                                                     num_input_images=self.num_pose_frames)  # REVIEW
+                self.models["pose_encoder"] = nn.DataParallel(
+                    networks.ResnetEncoder(self.opt.num_layers,
+                                           self.opt.weights_init == "pretrained",
+                                           num_input_images=self.num_pose_frames))  # REVIEW
 
                 self.models["pose_encoder"].to(self.device)
                 self.parameters_to_train += list(self.models["pose_encoder"].parameters())
 
-                self.models["pose"] = networks.PoseDecoder(self.models["pose_encoder"].num_ch_enc,
-                                                           num_input_features=1,
-                                                           num_frames_to_predict_for=2)  # REVIEW
+                self.models["pose"] = nn.DataParallel(
+                    networks.PoseDecoder(self.models["pose_encoder"].num_ch_enc,
+                                         num_input_features=1,
+                                         num_frames_to_predict_for=2))  # REVIEW
 
             elif self.opt.pose_model_type == "shared":
                 self.models["pose"] = networks.PoseDecoder(self.models["encoder"].num_ch_enc, self.num_pose_frames)
