@@ -35,7 +35,7 @@ class PoseDecoder(nn.Module):
 
         self.relu = nn.ReLU()
 
-        self.net = nn.ModuleList(list(self.convs.values()))
+        # self.net = nn.ModuleList(list(self.convs.values()))
 
         if not requires_grad:
             for p in self.parameters():
