@@ -164,10 +164,10 @@ class Trainer:
             self.writers[mode] = SummaryWriter(os.path.join(self.log_path, mode))
 
         if not self.opt.no_ssim:
-            self.ssim = SSIM(kernel_size=9, stride=3, padding=0)
+            self.ssim = SSIM(kernel_size=8, stride=1, padding=0)  # REVIEW
             self.ssim.to(self.device)
 
-        self.l1_loss_pool = L1conv(kernel_size=9, stride=3)
+        self.l1_loss_pool = L1conv(kernel_size=8, stride=1)  # REVIEW
         self.l1_loss_pool.to(self.device)
 
         self.backproject_depth = {}

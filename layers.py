@@ -277,10 +277,10 @@ def get_smooth_loss(disp, img):
 class L1conv(nn.Module):
     def __init__(self, kernel_size, stride):
         super(L1conv, self).__init__()
-        self.avgpool = nn.AvgPool2d(kernel_size, stride)
+        self.pool = nn.MaxPool2d(kernel_size, stride)
 
     def forward(self, x):
-        return self.avgpool(x)
+        return self.pool(x)
 
 
 class SSIM(nn.Module):  # https://understandingwithcode.wordpress.com/2014/03/03/2/
