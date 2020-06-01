@@ -164,11 +164,8 @@ class Trainer:
             self.writers[mode] = SummaryWriter(os.path.join(self.log_path, mode))
 
         if not self.opt.no_ssim:
-            self.ssim = SSIM(kernel_size=8, stride=1, padding=0)  # REVIEW
+            self.ssim = SSIM(kernel_size=9, stride=1, padding=4)  # REVIEW
             self.ssim.to(self.device)
-
-        self.l1_loss_pool = L1conv(kernel_size=8, stride=1)  # REVIEW
-        self.l1_loss_pool.to(self.device)
 
         self.backproject_depth = {}
         self.project_3d = {}
@@ -414,7 +411,6 @@ class Trainer:
         """
         abs_diff = torch.abs(target - pred)
         l1_loss = abs_diff.mean(1, True)
-        l1_loss = self.l1_loss_pool(l1_loss)
 
         if self.opt.no_ssim:
             reprojection_loss = l1_loss
