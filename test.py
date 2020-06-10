@@ -6,7 +6,7 @@ from networks.PackNet01 import PackNet01
 
 from torchsummary import summary
 
-encoder = PackNeSt_encoder()
+encoder = ResnetEncoder(26, False, num_input_images=1, requires_grad=True)
 # encoder = ResnetEncoder(18,False)
 # decoder = PackNeSt_decoder()
 # bottleneck = Bottleneck(64,64,radix=1)

@@ -72,8 +72,8 @@ def test_simple(args):
 
     # LOADING PRETRAINED MODEL
     print("   Loading pretrained encoder")
-    # encoder = networks.ResnetEncoder(18, False)
-    encoder = networks.PackNeSt_encoder()  # REVIEW
+    encoder = networks.ResnetEncoder(26, False)
+    # encoder = networks.PackNeSt_encoder()  # REVIEW
     loaded_dict_enc = torch.load(encoder_path, map_location=device)
 
     # extract the height and width of image that this model was trained with
@@ -85,9 +85,9 @@ def test_simple(args):
     encoder.eval()
 
     print("   Loading pretrained decoder")
-    # depth_decoder = networks.DepthDecoder(
-    #     num_ch_enc=encoder.num_ch_enc, scales=range(4))
-    depth_decoder = networks.PackNeSt_decoder()  # REVIEW
+    depth_decoder = networks.DepthDecoder(
+        num_ch_enc=encoder.num_ch_enc, scales=range(4))
+    # depth_decoder = networks.PackNeSt_decoder()  # REVIEW
 
     loaded_dict = torch.load(depth_decoder_path, map_location=device)
     depth_decoder.load_state_dict(loaded_dict)

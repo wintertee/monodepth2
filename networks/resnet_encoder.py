@@ -13,6 +13,8 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.utils.model_zoo as model_zoo
 
+from . import resnest
+
 
 class ResNetMultiImageInput(models.ResNet):  # 可以生成一个任意一个类型的 ResNet ，增加了num_input_images的功能
     """Constructs a resnet model with varying number of input images.
@@ -69,6 +71,7 @@ class ResnetEncoder(nn.Module):
 
         resnets = {
             18: models.resnet18,
+            26: resnest.resnest26,
             34: models.resnet34,
             50: models.resnet50,
             101: models.resnet101,
@@ -83,7 +86,8 @@ class ResnetEncoder(nn.Module):
         else:
             self.encoder = resnets[num_layers](pretrained)  # 否则使用自带的ResNet
 
-        if num_layers > 34:
+
+        if num_layers > 34 or num_layers == 26:
             self.num_ch_enc[1:] *= 4  # Resnet34以上的，第1个block开始输出通道*4
 
         if not requires_grad:
