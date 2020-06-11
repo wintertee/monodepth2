@@ -69,7 +69,7 @@ def evaluate(opt):
     pose_encoder_path = os.path.join(opt.load_weights_folder, "pose_encoder.pth")
     pose_decoder_path = os.path.join(opt.load_weights_folder, "pose.pth")
 
-    pose_encoder = networks.ResnetEncoder(opt.num_layers, False, 2)
+    pose_encoder = networks.ResnetEncoder(opt.pose_num_layers, False, 2)
     pose_encoder.load_state_dict(torch.load(pose_encoder_path))
 
     pose_decoder = networks.PoseDecoder(pose_encoder.num_ch_enc, 1, 2)

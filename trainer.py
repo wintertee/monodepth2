@@ -62,7 +62,7 @@ class Trainer:
         self.models["encoder"].to(self.device)
         self.parameters_to_train += list(self.models["encoder"].parameters())
 
-        self.models["depth"] = networks.DepthDecoder(np.array([64, 64, 128, 256, 512]), self.opt.scales)
+        self.models["depth"] = networks.DepthDecoder(self.models["encoder"].num_ch_enc, self.opt.scales)
         # self.models["depth"] = nn.DataParallel(networks.PackNeSt_decoder())  # REVIEW
         self.models["depth"].to(self.device)
         self.parameters_to_train += list(self.models["depth"].parameters())
@@ -70,16 +70,16 @@ class Trainer:
         if self.use_pose_net:
             if self.opt.pose_model_type == "separate_resnet":
                 # default="separate_resnet", choices=["posecnn", "separate_resnet", "shared"]
-                self.models["pose_encoder"] = networks.ResnetEncoder(self.opt.num_layers,
-                                           self.opt.weights_init == "pretrained",
-                                           num_input_images=self.num_pose_frames)  # REVIEW
+                self.models["pose_encoder"] = networks.ResnetEncoder(self.opt.pose_num_layers,
+                                                                     self.opt.weights_init == "pretrained",
+                                                                     num_input_images=self.num_pose_frames)  # REVIEW
 
                 self.models["pose_encoder"].to(self.device)
                 self.parameters_to_train += list(self.models["pose_encoder"].parameters())
 
-                self.models["pose"] = networks.PoseDecoder(np.array([64, 64, 128, 256, 512]),
-                                         num_input_features=1,
-                                         num_frames_to_predict_for=2)  # REVIEW
+                self.models["pose"] = networks.PoseDecoder(self.models["pose_encoder"].num_ch_enc,
+                                                           num_input_features=1,
+                                                           num_frames_to_predict_for=2)  # REVIEW
 
             elif self.opt.pose_model_type == "shared":
                 self.models["pose"] = networks.PoseDecoder(self.models["encoder"].num_ch_enc, self.num_pose_frames)
