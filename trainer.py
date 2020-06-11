@@ -62,7 +62,7 @@ class Trainer:
         self.models["encoder"].to(self.device)
         self.parameters_to_train += list(self.models["encoder"].parameters())
 
-        self.models["depth"] = nn.DataParallel(networks.DepthDecoder(self.models["encoder"].num_ch_enc, self.opt.scales))
+        self.models["depth"] = nn.DataParallel(networks.DepthDecoder(np.array([64, 64, 128, 256, 512]), self.opt.scales))
         # self.models["depth"] = nn.DataParallel(networks.PackNeSt_decoder())  # REVIEW
         self.models["depth"].to(self.device)
         self.parameters_to_train += list(self.models["depth"].parameters())
