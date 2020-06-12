@@ -3,7 +3,7 @@
 ## Email: zhanghang0704@gmail.com
 ## Copyright (c) 2020
 ##
-## LICENSE file in the root directory of this source tree 
+## LICENSE file in the root directory of this source tree
 ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 """ResNet variants"""
 import math
@@ -14,9 +14,11 @@ from .splat import SplAtConv2d
 
 __all__ = ['ResNet', 'Bottleneck']
 
+
 class DropBlock2D(object):
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
+
 
 class GlobalAvgPool2d(nn.Module):
     def __init__(self):
@@ -25,7 +27,6 @@ class GlobalAvgPool2d(nn.Module):
 
     def forward(self, inputs):
         return nn.functional.adaptive_avg_pool2d(inputs, 1).view(inputs.size(0), -1)
-
 
 
 # ----------------------------------------------------------------
@@ -57,16 +58,30 @@ class GlobalAvgPool2d(nn.Module):
 # Estimated Total Size (MB): 192.03
 # ----------------------------------------------------------------
 
+
 class Bottleneck(nn.Module):
     """ResNet Bottleneck
     """
     # pylint: disable=unused-argument
     expansion = 4
-    def __init__(self, inplanes, planes, stride=1, downsample=None,
-                 radix=1, cardinality=1, bottleneck_width=64,
-                 avd=False, avd_first=False, dilation=1, is_first=False,
-                 rectified_conv=False, rectify_avg=False,
-                 norm_layer=None, dropblock_prob=0.0, last_gamma=False):
+
+    def __init__(self,
+                 inplanes,
+                 planes,
+                 stride=1,
+                 downsample=None,
+                 radix=1,
+                 cardinality=1,
+                 bottleneck_width=64,
+                 avd=False,
+                 avd_first=False,
+                 dilation=1,
+                 is_first=False,
+                 rectified_conv=False,
+                 rectify_avg=False,
+                 norm_layer=None,
+                 dropblock_prob=0.0,
+                 last_gamma=False):
         super(Bottleneck, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -89,32 +104,44 @@ class Bottleneck(nn.Module):
             self.dropblock3 = DropBlock2D(dropblock_prob, 3)
 
         if radix >= 1:
-            self.conv2 = SplAtConv2d(
-                group_width, group_width, kernel_size=3,
-                stride=stride, padding=dilation,
-                dilation=dilation, groups=cardinality, bias=False,
-                radix=radix, rectify=rectified_conv,
-                rectify_avg=rectify_avg,
-                norm_layer=norm_layer,
-                dropblock_prob=dropblock_prob)
+            self.conv2 = SplAtConv2d(group_width,
+                                     group_width,
+                                     kernel_size=3,
+                                     stride=stride,
+                                     padding=dilation,
+                                     dilation=dilation,
+                                     groups=cardinality,
+                                     bias=False,
+                                     radix=radix,
+                                     rectify=rectified_conv,
+                                     rectify_avg=rectify_avg,
+                                     norm_layer=norm_layer,
+                                     dropblock_prob=dropblock_prob)
         elif rectified_conv:
             from rfconv import RFConv2d
-            self.conv2 = RFConv2d(
-                group_width, group_width, kernel_size=3, stride=stride,
-                padding=dilation, dilation=dilation,
-                groups=cardinality, bias=False,
-                average_mode=rectify_avg)
+            self.conv2 = RFConv2d(group_width,
+                                  group_width,
+                                  kernel_size=3,
+                                  stride=stride,
+                                  padding=dilation,
+                                  dilation=dilation,
+                                  groups=cardinality,
+                                  bias=False,
+                                  average_mode=rectify_avg)
             self.bn2 = norm_layer(group_width)
         else:
-            self.conv2 = nn.Conv2d(
-                group_width, group_width, kernel_size=3, stride=stride,
-                padding=dilation, dilation=dilation,
-                groups=cardinality, bias=False)
+            self.conv2 = nn.Conv2d(group_width,
+                                   group_width,
+                                   kernel_size=3,
+                                   stride=stride,
+                                   padding=dilation,
+                                   dilation=dilation,
+                                   groups=cardinality,
+                                   bias=False)
             self.bn2 = norm_layer(group_width)
 
-        self.conv3 = nn.Conv2d(
-            group_width, planes * 4, kernel_size=1, bias=False)
-        self.bn3 = norm_layer(planes*4)
+        self.conv3 = nn.Conv2d(group_width, planes * 4, kernel_size=1, bias=False)
+        self.bn3 = norm_layer(planes * 4)
 
         if last_gamma:
             from torch.nn.init import zeros_
@@ -159,6 +186,7 @@ class Bottleneck(nn.Module):
 
         return out
 
+
 class ResNet(nn.Module):
     """ResNet Variants
 
@@ -183,18 +211,33 @@ class ResNet(nn.Module):
 
         - Yu, Fisher, and Vladlen Koltun. "Multi-scale context aggregation by dilated convolutions."
     """
+
     # pylint: disable=unused-variable
-    def __init__(self, block, layers, radix=1, groups=1, bottleneck_width=64,
-                 num_classes=1000, dilated=False, dilation=1,
-                 deep_stem=False, stem_width=64, avg_down=False,
-                 rectified_conv=False, rectify_avg=False,
-                 avd=False, avd_first=False,
-                 final_drop=0.0, dropblock_prob=0,
-                 last_gamma=False, norm_layer=nn.BatchNorm2d):
+    def __init__(self,
+                 block,
+                 layers,
+                 radix=1,
+                 groups=1,
+                 bottleneck_width=64,
+                 num_classes=1000,
+                 dilated=False,
+                 dilation=1,
+                 deep_stem=False,
+                 stem_width=64,
+                 avg_down=False,
+                 rectified_conv=False,
+                 rectify_avg=False,
+                 avd=False,
+                 avd_first=False,
+                 final_drop=0.0,
+                 dropblock_prob=0,
+                 last_gamma=False,
+                 norm_layer=nn.BatchNorm2d,
+                 in_channels=3):
         self.cardinality = groups
         self.bottleneck_width = bottleneck_width
         # ResNet-D params
-        self.inplanes = stem_width*2 if deep_stem else 64
+        self.inplanes = stem_width * 2 if deep_stem else 64
         self.avg_down = avg_down
         self.last_gamma = last_gamma
         # ResNeSt params
@@ -213,41 +256,62 @@ class ResNet(nn.Module):
         conv_kwargs = {'average_mode': rectify_avg} if rectified_conv else {}
         if deep_stem:
             self.conv1 = nn.Sequential(
-                conv_layer(3, stem_width, kernel_size=3, stride=2, padding=1, bias=False, **conv_kwargs),
+                conv_layer(in_channels, stem_width, kernel_size=3, stride=2, padding=1, bias=False, **conv_kwargs),
                 norm_layer(stem_width),
                 nn.ReLU(inplace=True),
                 conv_layer(stem_width, stem_width, kernel_size=3, stride=1, padding=1, bias=False, **conv_kwargs),
                 norm_layer(stem_width),
                 nn.ReLU(inplace=True),
-                conv_layer(stem_width, stem_width*2, kernel_size=3, stride=1, padding=1, bias=False, **conv_kwargs),
+                conv_layer(stem_width, stem_width * 2, kernel_size=3, stride=1, padding=1, bias=False, **conv_kwargs),
             )
         else:
-            self.conv1 = conv_layer(3, 64, kernel_size=7, stride=2, padding=3,
-                                   bias=False, **conv_kwargs)
+            self.conv1 = conv_layer(in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False, **conv_kwargs)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0], norm_layer=norm_layer, is_first=False)
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2, norm_layer=norm_layer)
         if dilated or dilation == 4:
-            self.layer3 = self._make_layer(block, 256, layers[2], stride=1,
-                                           dilation=2, norm_layer=norm_layer,
-                                           dropblock_prob=dropblock_prob)
-            self.layer4 = self._make_layer(block, 512, layers[3], stride=1,
-                                           dilation=4, norm_layer=norm_layer,
-                                           dropblock_prob=dropblock_prob)
-        elif dilation==2:
-            self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
-                                           dilation=1, norm_layer=norm_layer,
-                                           dropblock_prob=dropblock_prob)
-            self.layer4 = self._make_layer(block, 512, layers[3], stride=1,
-                                           dilation=2, norm_layer=norm_layer,
-                                           dropblock_prob=dropblock_prob)
-        else:
-            self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
+            self.layer3 = self._make_layer(block,
+                                           256,
+                                           layers[2],
+                                           stride=1,
+                                           dilation=2,
                                            norm_layer=norm_layer,
                                            dropblock_prob=dropblock_prob)
-            self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
+            self.layer4 = self._make_layer(block,
+                                           512,
+                                           layers[3],
+                                           stride=1,
+                                           dilation=4,
+                                           norm_layer=norm_layer,
+                                           dropblock_prob=dropblock_prob)
+        elif dilation == 2:
+            self.layer3 = self._make_layer(block,
+                                           256,
+                                           layers[2],
+                                           stride=2,
+                                           dilation=1,
+                                           norm_layer=norm_layer,
+                                           dropblock_prob=dropblock_prob)
+            self.layer4 = self._make_layer(block,
+                                           512,
+                                           layers[3],
+                                           stride=1,
+                                           dilation=2,
+                                           norm_layer=norm_layer,
+                                           dropblock_prob=dropblock_prob)
+        else:
+            self.layer3 = self._make_layer(block,
+                                           256,
+                                           layers[2],
+                                           stride=2,
+                                           norm_layer=norm_layer,
+                                           dropblock_prob=dropblock_prob)
+            self.layer4 = self._make_layer(block,
+                                           512,
+                                           layers[3],
+                                           stride=2,
                                            norm_layer=norm_layer,
                                            dropblock_prob=dropblock_prob)
         self.avgpool = GlobalAvgPool2d()
@@ -262,58 +326,88 @@ class ResNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _make_layer(self, block, planes, blocks, stride=1, dilation=1, norm_layer=None,
-                    dropblock_prob=0.0, is_first=True):
+    def _make_layer(self,
+                    block,
+                    planes,
+                    blocks,
+                    stride=1,
+                    dilation=1,
+                    norm_layer=None,
+                    dropblock_prob=0.0,
+                    is_first=True):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             down_layers = []
             if self.avg_down:
                 if dilation == 1:
-                    down_layers.append(nn.AvgPool2d(kernel_size=stride, stride=stride,
-                                                    ceil_mode=True, count_include_pad=False))
+                    down_layers.append(
+                        nn.AvgPool2d(kernel_size=stride, stride=stride, ceil_mode=True, count_include_pad=False))
                 else:
-                    down_layers.append(nn.AvgPool2d(kernel_size=1, stride=1,
-                                                    ceil_mode=True, count_include_pad=False))
-                down_layers.append(nn.Conv2d(self.inplanes, planes * block.expansion,
-                                             kernel_size=1, stride=1, bias=False))
+                    down_layers.append(nn.AvgPool2d(kernel_size=1, stride=1, ceil_mode=True, count_include_pad=False))
+                down_layers.append(
+                    nn.Conv2d(self.inplanes, planes * block.expansion, kernel_size=1, stride=1, bias=False))
             else:
-                down_layers.append(nn.Conv2d(self.inplanes, planes * block.expansion,
-                                             kernel_size=1, stride=stride, bias=False))
+                down_layers.append(
+                    nn.Conv2d(self.inplanes, planes * block.expansion, kernel_size=1, stride=stride, bias=False))
             down_layers.append(norm_layer(planes * block.expansion))
             downsample = nn.Sequential(*down_layers)
 
         layers = []
         if dilation == 1 or dilation == 2:
-            layers.append(block(self.inplanes, planes, stride, downsample=downsample,
-                                radix=self.radix, cardinality=self.cardinality,
-                                bottleneck_width=self.bottleneck_width,
-                                avd=self.avd, avd_first=self.avd_first,
-                                dilation=1, is_first=is_first, rectified_conv=self.rectified_conv,
-                                rectify_avg=self.rectify_avg,
-                                norm_layer=norm_layer, dropblock_prob=dropblock_prob,
-                                last_gamma=self.last_gamma))
+            layers.append(
+                block(self.inplanes,
+                      planes,
+                      stride,
+                      downsample=downsample,
+                      radix=self.radix,
+                      cardinality=self.cardinality,
+                      bottleneck_width=self.bottleneck_width,
+                      avd=self.avd,
+                      avd_first=self.avd_first,
+                      dilation=1,
+                      is_first=is_first,
+                      rectified_conv=self.rectified_conv,
+                      rectify_avg=self.rectify_avg,
+                      norm_layer=norm_layer,
+                      dropblock_prob=dropblock_prob,
+                      last_gamma=self.last_gamma))
         elif dilation == 4:
-            layers.append(block(self.inplanes, planes, stride, downsample=downsample,
-                                radix=self.radix, cardinality=self.cardinality,
-                                bottleneck_width=self.bottleneck_width,
-                                avd=self.avd, avd_first=self.avd_first,
-                                dilation=2, is_first=is_first, rectified_conv=self.rectified_conv,
-                                rectify_avg=self.rectify_avg,
-                                norm_layer=norm_layer, dropblock_prob=dropblock_prob,
-                                last_gamma=self.last_gamma))
+            layers.append(
+                block(self.inplanes,
+                      planes,
+                      stride,
+                      downsample=downsample,
+                      radix=self.radix,
+                      cardinality=self.cardinality,
+                      bottleneck_width=self.bottleneck_width,
+                      avd=self.avd,
+                      avd_first=self.avd_first,
+                      dilation=2,
+                      is_first=is_first,
+                      rectified_conv=self.rectified_conv,
+                      rectify_avg=self.rectify_avg,
+                      norm_layer=norm_layer,
+                      dropblock_prob=dropblock_prob,
+                      last_gamma=self.last_gamma))
         else:
             raise RuntimeError("=> unknown dilation size: {}".format(dilation))
 
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes,
-                                radix=self.radix, cardinality=self.cardinality,
-                                bottleneck_width=self.bottleneck_width,
-                                avd=self.avd, avd_first=self.avd_first,
-                                dilation=dilation, rectified_conv=self.rectified_conv,
-                                rectify_avg=self.rectify_avg,
-                                norm_layer=norm_layer, dropblock_prob=dropblock_prob,
-                                last_gamma=self.last_gamma))
+            layers.append(
+                block(self.inplanes,
+                      planes,
+                      radix=self.radix,
+                      cardinality=self.cardinality,
+                      bottleneck_width=self.bottleneck_width,
+                      avd=self.avd,
+                      avd_first=self.avd_first,
+                      dilation=dilation,
+                      rectified_conv=self.rectified_conv,
+                      rectify_avg=self.rectify_avg,
+                      norm_layer=norm_layer,
+                      dropblock_prob=dropblock_prob,
+                      last_gamma=self.last_gamma))
 
         return nn.Sequential(*layers)
 

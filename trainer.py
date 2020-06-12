@@ -71,7 +71,8 @@ class Trainer:
             if self.opt.pose_model_type == "separate_resnet":
                 # default="separate_resnet", choices=["posecnn", "separate_resnet", "shared"]
                 self.models["pose_encoder"] = networks.ResnetEncoder(self.opt.pose_num_layers,
-                                                                     self.opt.weights_init == "pretrained",
+                                                                     # self.opt.weights_init == "pretrained",
+                                                                     False,
                                                                      num_input_images=self.num_pose_frames)  # REVIEW
 
                 self.models["pose_encoder"].to(self.device)
