@@ -1,4 +1,37 @@
-# Monodepth2
+# Monodepth2 with ResNeSt26 support
+
+## usage
+
+Our experiment use a RTX 2080 Ti 11G. Due to memory limit, we set the largest possible batch size.
+
+train with depth encoder: `ResNeSt26`, pose encoder: `ResNet18`:
+
+```bash
+python train.py --model_name mono_model --log_dir ./log --num_layers 26 --batch_size 10
+```
+
+train with depth encoder: `ResNeSt26`, pose encoder: `ResNeSt26`:
+
+```bash
+python train.py --model_name mono_model --log_dir ./log --num_layers 26 --pose_num_layers 26 --batch_size 8
+```
+
+evaluation:
+
+```bash
+python evaluate_depth.py --load_weights_folder ~/tmp/mono_model/models/weights_19/ --eval_mono --num_layers 26 --pose_num_layers 26
+```
+
+## result
+
+|w/o pretrain| depth encoder | pose encoder | abs_rel  | sq_rel     | rmse      | rmse_log | δ<1.25   | δ<1.25^2 | δ<1.25^3 |
+|------------|---------------|--------------|----------|------------|-----------|----------|----------|----------|----------|
+| yes        | ResNet18      | ResNet18     | 0.132    | 1.044      | 5.142     | 0.210    | 0.845    | 0.948    | **0.977**|
+| yes        | ResNeSt26     | ResNet18     | **0.128**| **1.040**  | **5.082** | **0.206**| **0.856**| **0.950**| **0.977**|
+
+-----------------------
+
+# original README
 
 This is the reference PyTorch implementation for training and testing depth estimation models using the method described in
 
