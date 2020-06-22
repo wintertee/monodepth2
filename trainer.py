@@ -163,10 +163,7 @@ class Trainer:
             self.writers[mode] = SummaryWriter(os.path.join(self.log_path, mode))
 
         if not self.opt.no_ssim:
-            if not self.opt.big_ssim:
-                self.ssim = SSIM()
-            else:
-                self.ssim = SSIM(kernel_size=9, stride=1, padding=4)  # REVIEW
+            self.ssim = SSIM(kernel_size=self.opt.ssim_size, stride=1, padding=self.opt.ssim_size//2)  # REVIEW
             self.ssim.to(self.device)
 
         self.backproject_depth = {}
